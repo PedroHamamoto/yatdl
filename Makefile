@@ -43,4 +43,7 @@ migrate-drop:
 	read confirm; \
 	$(MIGRATE) drop
 
+api-start:
+	go run cmd/api/main.go
+
 .PHONY: migrate migrate-up migrate-down migrate-down-all migrate-version migrate-force migrate-create migrate-drop

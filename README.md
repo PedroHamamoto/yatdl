@@ -1,0 +1,41 @@
+# YATDL - Yet  Another To-Do List
+
+A lightweight _To-Do List_ API, built for learning Go
+
+---
+
+## Requirements
+* **Go** (version 1.25+)
+* **Docker & Docker Compose**
+
+---
+## Getting Started
+
+### 1. Spin up the Database
+```bash
+make db-up
+```
+### 2. Execute the Migrations
+```bash
+make migrate-up
+```
+
+### 3. Run the application
+```bash
+make api-start
+```
+The API will be running at http://localhost:8080
+
+---
+
+## API Endpoints
+TODO - Include swagger link
+
+---
+
+## Development
+### Creating migrations
+To create a new set of migration files (up and down) with the current timestamp:
+```bash
+make migrate-create NAME=create_users_table
+```
