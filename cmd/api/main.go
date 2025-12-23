@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"yatdl/internal/config"
@@ -9,7 +10,12 @@ import (
 
 func main() {
 	db := config.ConnectToDatabase()
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
 
 	userStore := user.NewStore(db)
 	userService := user.NewService(userStore)

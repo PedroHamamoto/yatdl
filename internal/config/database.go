@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // postgres driver, used by database/sql
 )
 
 func ConnectToDatabase() *sql.DB {

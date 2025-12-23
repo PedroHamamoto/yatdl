@@ -1,0 +1,70 @@
+run:
+  timeout: 5m
+  tests: true
+
+output:
+  sort-results: true
+
+linters:
+  disable-all: true
+  enable:
+    # Core correctness
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    - typecheck
+
+    # Code quality / idiomatic Go
+    - revive
+    - gosimple
+    - gofmt
+    - goimports
+
+    # Safety / bugs
+    - bodyclose
+    - nilerr
+    - copyloopvar
+
+    # Maintainability
+    - unparam
+    - prealloc
+
+linters-settings:
+  revive:
+    ignore-generated-header: true
+    rules:
+      - name: var-naming
+      - name: line-length-limit
+        arguments: [120]
+      - name: blank-imports
+      - name: unused-parameter
+      - name: early-return
+      - name: unexported-return
+      - name: error-return
+      - name: error-strings
+      - name: receiver-naming
+      - name: unnecessary-stmt
+
+  govet:
+    enable:
+      - shadow
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    # http.ResponseWriter commonly ignores Close()
+    - linters:
+        - bodyclose
+      text: "response body close"
+
+    # Allow short-lived vars in tests
+    - path: _test\.go
+      linters:
+        - revive
+        - errcheck
+        - unparam

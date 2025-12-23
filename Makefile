@@ -46,4 +46,7 @@ migrate-drop:
 api-start:
 	go run cmd/api/main.go
 
+lint:
+	 golangci-lint run
+
 .PHONY: migrate migrate-up migrate-down migrate-down-all migrate-version migrate-force migrate-create migrate-drop

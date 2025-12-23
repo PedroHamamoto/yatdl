@@ -5,8 +5,9 @@ A lightweight _To-Do List_ API, built for learning Go
 ---
 
 ## Requirements
-* **Go** (version 1.25+)
-* **Docker & Docker Compose**
+* **[Go](https://go.dev/)** (version 1.25+)
+* **[Docker & Docker Compose](https://www.docker.com/)**
+* **[Golangci-lint](https://golangci-lint.run/)**
 
 ---
 ## Getting Started
@@ -38,4 +39,9 @@ TODO - Include swagger link
 To create a new set of migration files (up and down) with the current timestamp:
 ```bash
 make migrate-create NAME=create_users_table
+```
+
+### Lint
+```bash
+make lint
 ```
