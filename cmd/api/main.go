@@ -15,7 +15,7 @@ func main() {
 	userHandler := user.NewHandler(userStore)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/users", userHandler.Create)
+	mux.HandleFunc("POST /users", userHandler.Create)
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
