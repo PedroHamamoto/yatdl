@@ -12,7 +12,8 @@ func main() {
 	defer db.Close()
 
 	userStore := user.NewStore(db)
-	userHandler := user.NewHandler(userStore)
+	userService := user.NewService(userStore)
+	userHandler := user.NewHandler(userService)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /users", userHandler.Create)

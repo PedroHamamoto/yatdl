@@ -3,12 +3,10 @@ package user
 import (
 	"encoding/json"
 	"net/http"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Handler struct {
-	store *Store
+	service *Service
 }
 
 type createUserRequest struct {
@@ -16,8 +14,8 @@ type createUserRequest struct {
 	Password string `json:"password"`
 }
 
-func NewHandler(store *Store) *Handler {
-	return &Handler{store: store}
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -27,17 +25,9 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO validate the request content
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	err := h.service.Create(r.Context(), request.Email, request.Password)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	err = h.store.CreateUser(r.Context(), request.Email, hash)
-	if err != nil {
-		// TODO check unique e-mail violation
+		// TODO Handle errors properly
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
