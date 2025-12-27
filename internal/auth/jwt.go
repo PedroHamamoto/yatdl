@@ -5,7 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,11 @@ type jwtPayload struct {
 	Exp int64 `json:"exp"`
 }
 
+var (
+	ErrInvalidToken = errors.New("invalid token")
+	ErrExpiredToken = errors.New("expired token")
+)
+
 func GenerateJWT(userID int64, secret []byte) (string, int, error) {
 	const expiresInSeconds = 24 * 60 * 60
 
@@ -31,7 +38,7 @@ func GenerateJWT(userID int64, secret []byte) (string, int, error) {
 	payload := jwtPayload{
 		Sub: userID,
 		Iat: time.Now().Unix(),
-		Exp: time.Now().Add(expiresInSeconds).Unix(),
+		Exp: time.Now().Add(time.Second * time.Duration(expiresInSeconds)).Unix(),
 	}
 
 	headerJSON, err := json.Marshal(header)
@@ -53,6 +60,42 @@ func GenerateJWT(userID int64, secret []byte) (string, int, error) {
 	return fmt.Sprintf("%s.%s", message, signature), expiresInSeconds, nil
 }
 
+func ValidateJWT(tokenString string, secret []byte) (int64, error) {
+	parts := strings.Split(tokenString, ".")
+	if len(parts) != 3 {
+		return 0, ErrInvalidToken
+	}
+
+	message := parts[0] + "." + parts[1]
+	signature, err := decode(parts[2])
+	if err != nil {
+		return 0, ErrInvalidToken
+	}
+
+	mac := hmac.New(sha256.New, secret)
+	mac.Write([]byte(message))
+	expectedSignature := mac.Sum(nil)
+
+	if !hmac.Equal(signature, expectedSignature) {
+		return 0, ErrInvalidToken
+	}
+
+	payloadJSON, err := decode(parts[1])
+	if err != nil {
+		return 0, ErrInvalidToken
+	}
+
+	var payload jwtPayload
+	if err := json.Unmarshal(payloadJSON, &payload); err != nil {
+		return 0, ErrInvalidToken
+	}
+	if time.Now().Unix() > payload.Exp {
+		return 0, ErrExpiredToken
+	}
+
+	return payload.Sub, nil
+}
+
 func encode(b []byte) string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
@@ -61,4 +104,8 @@ func signHS256(message string, secret []byte) string {
 	h := hmac.New(sha256.New, secret)
 	h.Write([]byte(message))
 	return encode(h.Sum(nil))
+}
+
+func decode(s string) ([]byte, error) {
+	return base64.RawURLEncoding.DecodeString(s)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -28,13 +29,29 @@ func main() {
 	authHandler := auth.NewHandler(authService)
 
 	mux := http.NewServeMux()
+	// Public
 	mux.HandleFunc("POST /users", userHandler.Create)
 	mux.HandleFunc("POST /login", authHandler.Login)
+
+	// Protected
+	authMiddleware := middleware.Auth(os.Getenv("JWT_SECRET"))
+	protectedGreeting := authMiddleware(
+		middleware.JSONContentType(http.HandlerFunc(Greeting)),
+	)
+
+	mux.Handle("GET /greeting", protectedGreeting)
 
 	handler := middleware.JSONContentType(mux)
 
 	err := http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func Greeting(w http.ResponseWriter, _ *http.Request) {
+	err := json.NewEncoder(w).Encode("Hello World!")
+	if err != nil {
+		return
 	}
 }
