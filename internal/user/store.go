@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type Store struct {
@@ -20,4 +21,22 @@ func (s *Store) CreateUser(ctx context.Context, email string, passwordHash []byt
 		email, passwordHash)
 
 	return err
+}
+
+func (s *Store) FindByEmail(ctx context.Context, email string) (*User, error) {
+	const query = "SELECT id, email, password_hash FROM users WHERE email = $1"
+
+	var user User
+	err := s.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+
 }

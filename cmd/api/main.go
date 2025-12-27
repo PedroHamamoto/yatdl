@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
+	"yatdl/internal/auth"
 	"yatdl/internal/config"
+	"yatdl/internal/http/middleware"
 	"yatdl/internal/user"
 )
 
@@ -21,10 +24,16 @@ func main() {
 	userService := user.NewService(userStore)
 	userHandler := user.NewHandler(userService)
 
+	authService := auth.NewService(os.Getenv("JWT_SECRET"), userStore)
+	authHandler := auth.NewHandler(authService)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /users", userHandler.Create)
+	mux.HandleFunc("POST /login", authHandler.Login)
 
-	err := http.ListenAndServe(":8080", mux)
+	handler := middleware.JSONContentType(mux)
+
+	err := http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Fatal(err)
 	}
