@@ -12,10 +12,9 @@ type contextKey string
 
 const userIDKey contextKey = "userID"
 
-func Auth(secretString string) func(http.Handler) http.Handler {
+func Auth(jwt *auth.Jwt) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			secret := []byte(secretString)
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				http.Error(w, "missing authorization header", http.StatusUnauthorized)
@@ -28,7 +27,7 @@ func Auth(secretString string) func(http.Handler) http.Handler {
 				return
 			}
 
-			userID, err := auth.ValidateJWT(parts[1], secret)
+			userID, err := jwt.ValidateJWT(parts[1])
 			if err != nil {
 				log.Printf("failed to validate JWT: %v", err)
 				http.Error(w, "invalid or expired token", http.StatusUnauthorized)

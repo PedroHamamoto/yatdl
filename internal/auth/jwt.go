@@ -22,12 +22,20 @@ type jwtPayload struct {
 	Exp int64 `json:"exp"`
 }
 
+type Jwt struct {
+	secret []byte
+}
+
 var (
 	ErrInvalidToken = errors.New("invalid token")
 	ErrExpiredToken = errors.New("expired token")
 )
 
-func GenerateJWT(userID int64, secret []byte) (string, int, error) {
+func NewJwt(secret string) *Jwt {
+	return &Jwt{secret: []byte(secret)}
+}
+
+func (j *Jwt) GenerateJWT(userID int64) (string, int, error) {
 	const expiresInSeconds = 24 * 60 * 60
 
 	header := jwtHeader{
@@ -55,12 +63,12 @@ func GenerateJWT(userID int64, secret []byte) (string, int, error) {
 	payloadEncoded := encode(payloadJSON)
 
 	message := fmt.Sprintf("%s.%s", headerEncoded, payloadEncoded)
-	signature := signHS256(message, secret)
+	signature := signHS256(message, j.secret)
 
 	return fmt.Sprintf("%s.%s", message, signature), expiresInSeconds, nil
 }
 
-func ValidateJWT(tokenString string, secret []byte) (int64, error) {
+func (j *Jwt) ValidateJWT(tokenString string) (int64, error) {
 	parts := strings.Split(tokenString, ".")
 	if len(parts) != 3 {
 		return 0, ErrInvalidToken
@@ -72,7 +80,7 @@ func ValidateJWT(tokenString string, secret []byte) (int64, error) {
 		return 0, ErrInvalidToken
 	}
 
-	mac := hmac.New(sha256.New, secret)
+	mac := hmac.New(sha256.New, j.secret)
 	mac.Write([]byte(message))
 	expectedSignature := mac.Sum(nil)
 

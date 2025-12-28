@@ -25,7 +25,8 @@ func main() {
 	userService := user.NewService(userStore)
 	userHandler := user.NewHandler(userService)
 
-	authService := auth.NewService(os.Getenv("JWT_SECRET"), userStore)
+	jwt := auth.NewJwt(os.Getenv("JWT_SECRET"))
+	authService := auth.NewService(jwt, userStore)
 	authHandler := auth.NewHandler(authService)
 
 	mux := http.NewServeMux()
@@ -34,7 +35,7 @@ func main() {
 	mux.HandleFunc("POST /login", authHandler.Login)
 
 	// Protected
-	authMiddleware := middleware.Auth(os.Getenv("JWT_SECRET"))
+	authMiddleware := middleware.Auth(jwt)
 	protectedGreeting := authMiddleware(
 		middleware.JSONContentType(http.HandlerFunc(Greeting)),
 	)

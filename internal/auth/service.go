@@ -13,13 +13,13 @@ var (
 )
 
 type Service struct {
-	jwtSecret []byte
+	jwt       *Jwt
 	userStore *user.Store
 }
 
-func NewService(jwtSecret string, userStore *user.Store) *Service {
+func NewService(jwt *Jwt, userStore *user.Store) *Service {
 	return &Service{
-		jwtSecret: []byte(jwtSecret),
+		jwt:       jwt,
 		userStore: userStore,
 	}
 }
@@ -38,7 +38,7 @@ func (s *Service) Login(ctx context.Context, email string, password string) (*Lo
 		return nil, ErrInvalidCredentials
 	}
 
-	token, expiresIn, err := GenerateJWT(int64(user.ID), s.jwtSecret)
+	token, expiresIn, err := s.jwt.GenerateJWT(int64(user.ID))
 	if err != nil {
 		return nil, err
 	}
