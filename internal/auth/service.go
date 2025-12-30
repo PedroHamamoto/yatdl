@@ -38,7 +38,7 @@ func (s *Service) Login(ctx context.Context, email string, password string) (*Lo
 		return nil, ErrInvalidCredentials
 	}
 
-	token, expiresIn, err := s.jwt.GenerateJWT(int64(user.ID))
+	token, expiresIn, err := s.jwt.GenerateJWT(user.ID)
 	if err != nil {
 		return nil, err
 	}

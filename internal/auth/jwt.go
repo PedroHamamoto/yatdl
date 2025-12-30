@@ -17,9 +17,9 @@ type jwtHeader struct {
 }
 
 type jwtPayload struct {
-	Sub int64 `json:"sub"`
-	Iat int64 `json:"iat"`
-	Exp int64 `json:"exp"`
+	Sub uint64 `json:"sub"`
+	Iat int64  `json:"iat"`
+	Exp int64  `json:"exp"`
 }
 
 type Jwt struct {
@@ -35,7 +35,7 @@ func NewJwt(secret string) *Jwt {
 	return &Jwt{secret: []byte(secret)}
 }
 
-func (j *Jwt) GenerateJWT(userID int64) (string, int, error) {
+func (j *Jwt) GenerateJWT(userID uint64) (string, int, error) {
 	const expiresInSeconds = 24 * 60 * 60
 
 	header := jwtHeader{
@@ -68,7 +68,7 @@ func (j *Jwt) GenerateJWT(userID int64) (string, int, error) {
 	return fmt.Sprintf("%s.%s", message, signature), expiresInSeconds, nil
 }
 
-func (j *Jwt) ValidateJWT(tokenString string) (int64, error) {
+func (j *Jwt) ValidateJWT(tokenString string) (uint64, error) {
 	parts := strings.Split(tokenString, ".")
 	if len(parts) != 3 {
 		return 0, ErrInvalidToken

@@ -2,13 +2,13 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"yatdl/internal/auth"
 	"yatdl/internal/config"
 	"yatdl/internal/http/middleware"
+	"yatdl/internal/task"
 	"yatdl/internal/user"
 )
 
@@ -29,30 +29,27 @@ func main() {
 	authService := auth.NewService(jwt, userStore)
 	authHandler := auth.NewHandler(authService)
 
+	taskStore := task.NewStore(db)
+	taskService := task.NewService(taskStore)
+	taskHandler := task.NewHandler(taskService)
+
 	mux := http.NewServeMux()
 	// Public
-	mux.HandleFunc("POST /users", userHandler.Create)
-	mux.HandleFunc("POST /login", authHandler.Login)
+	mux.HandleFunc("POST /api/users", userHandler.Create)
+	mux.HandleFunc("POST /api/login", authHandler.Login)
 
 	// Protected
 	authMiddleware := middleware.Auth(jwt)
-	protectedGreeting := authMiddleware(
-		middleware.JSONContentType(http.HandlerFunc(Greeting)),
+	protectedTaskCreate := authMiddleware(
+		middleware.JSONContentType(http.HandlerFunc(taskHandler.Create)),
 	)
 
-	mux.Handle("GET /greeting", protectedGreeting)
+	mux.Handle("POST /api/tasks", protectedTaskCreate)
 
 	handler := middleware.JSONContentType(mux)
 
 	err := http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Fatal(err)
-	}
-}
-
-func Greeting(w http.ResponseWriter, _ *http.Request) {
-	err := json.NewEncoder(w).Encode("Hello World!")
-	if err != nil {
-		return
 	}
 }
