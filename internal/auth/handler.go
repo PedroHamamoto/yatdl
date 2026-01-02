@@ -30,6 +30,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var request LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Printf("failed to decode login request: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

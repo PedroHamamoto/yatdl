@@ -29,8 +29,9 @@ The API will be running at http://localhost:8080
 
 ---
 
-## API Endpoints
-TODO - Include swagger link
+## API
+Execute `docker-compose up` and `go run cmd/api/main.go` to run the API locally.
+Access the swagger docs at http://localhost:8081
 
 ---
 

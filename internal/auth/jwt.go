@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 )
@@ -43,6 +44,7 @@ func (j *Jwt) GenerateJWT(userID uint64) (string, int, error) {
 		Typ: "JWT",
 	}
 
+	log.Printf("User id persisted in the JWT %v", userID)
 	payload := jwtPayload{
 		Sub: userID,
 		Iat: time.Now().Unix(),

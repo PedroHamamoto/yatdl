@@ -35,6 +35,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var request createTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Printf("failed to decode task request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}

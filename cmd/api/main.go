@@ -46,7 +46,9 @@ func main() {
 
 	mux.Handle("POST /api/tasks", protectedTaskCreate)
 
-	handler := middleware.JSONContentType(mux)
+	handler := middleware.CORS(
+		middleware.JSONContentType(mux),
+	)
 
 	err := http.ListenAndServe(":8080", handler)
 	if err != nil {

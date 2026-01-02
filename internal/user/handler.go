@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -22,6 +23,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var request createUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		log.Printf("failed to decode request: %v", err)
 		return
 	}
 
@@ -29,6 +31,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// TODO Handle errors properly
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		log.Printf("failed to create user: %v", err)
 		return
 	}
 
