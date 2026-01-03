@@ -3,6 +3,8 @@ package task
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 )
 
 type Store struct {
@@ -41,4 +43,67 @@ func (s Store) CreateTask(ctx context.Context, input CreateTaskInput) (Task, err
 	}
 
 	return task, nil
+}
+
+func (s Store) FindByID(ctx context.Context, id uint64) (*Task, error) {
+	const selectStatement = `
+		SELECT id, user_id, title, description, completed, created_at, updated_at
+		FROM tasks
+		WHERE id = $1
+	`
+
+	var task Task
+	err := s.db.
+		QueryRowContext(ctx, selectStatement, id).
+		Scan(&task.ID, &task.UserID, &task.Title, &task.Description, &task.Completed, &task.CreatedAt, &task.UpdatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if task.ID == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return &task, nil
+}
+
+func (s Store) UpdateTaskByID(ctx context.Context, input *UpdateTaskInput) error {
+	var setClauses []string
+	var args []any
+	argPos := 1
+
+	if input.Title != nil {
+		setClauses = append(setClauses, fmt.Sprintf("title = $%d", argPos))
+		args = append(args, *input.Title)
+		argPos++
+	}
+
+	if input.Description != nil {
+		setClauses = append(setClauses, fmt.Sprintf("description = $%d", argPos))
+		args = append(args, *input.Description)
+		argPos++
+	}
+
+	if input.Completed != nil {
+		setClauses = append(setClauses, fmt.Sprintf("completed = $%d", argPos))
+		args = append(args, *input.Completed)
+		argPos++
+	}
+
+	if len(setClauses) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	updateStatement := fmt.Sprintf(`
+		UPDATE tasks
+		SET %s,
+		    updated_at = current_timestamp
+		WHERE id = $%d
+	`, strings.Join(setClauses, ", "), argPos)
+
+	args = append(args, input.ID)
+
+	_, err := s.db.ExecContext(ctx, updateStatement, args...)
+	return err
 }

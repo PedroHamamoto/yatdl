@@ -40,15 +40,11 @@ func main() {
 
 	// Protected
 	authMiddleware := middleware.Auth(jwt)
-	protectedTaskCreate := authMiddleware(
-		middleware.JSONContentType(http.HandlerFunc(taskHandler.Create)),
-	)
 
-	mux.Handle("POST /api/tasks", protectedTaskCreate)
+	mux.Handle("POST /api/tasks", authMiddleware(http.HandlerFunc(taskHandler.Create)))
+	mux.Handle("PATCH /api/tasks/{id}", authMiddleware(http.HandlerFunc(taskHandler.Update)))
 
-	handler := middleware.CORS(
-		middleware.JSONContentType(mux),
-	)
+	handler := middleware.CORS(middleware.JSONContentType(mux))
 
 	err := http.ListenAndServe(":8080", handler)
 	if err != nil {

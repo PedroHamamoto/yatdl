@@ -65,7 +65,32 @@ paths:
           description: Not authorized
         '400':
           description: Invalid request
-
+  /api/tasks/{task_id}:
+    patch:
+      summary: Updates a task
+      description: Updates a task by id
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchTaskRequest'
+      responses:
+        '204':
+          description: Task updated successfully
+        '401':
+          description: Not authorized
+        '400':
+          description: Invalid request
 components:
   securitySchemes:
     BearerAuth:
@@ -137,3 +162,16 @@ components:
         completed:
           type: boolean
           example: false
+
+    PatchTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Updated title
+        description:
+          type: string
+          example: Updated description
+        completed:
+          type: boolean
+          example: true
