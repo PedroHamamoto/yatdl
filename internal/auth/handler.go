@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"yatdl/internal/http/httperr"
 )
 
 type LoginRequest struct {
@@ -31,7 +32,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Printf("failed to decode login request: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httperr.Write(w, &httperr.BadRequest)
 		return
 	}
 
@@ -40,17 +41,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	response, err := h.service.Login(r.Context(), request.Email, request.Password)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredentials) {
-			http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+			httperr.Write(w, &httperr.Unauthorized)
 			return
 		}
 
 		log.Printf("Unknow Error happened in Login: %v", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		httperr.Write(w, &httperr.Unknown)
 		return
 	}
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		httperr.Write(w, &httperr.Unknown)
 		return
 	}
 }

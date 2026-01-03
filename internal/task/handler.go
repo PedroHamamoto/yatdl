@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"yatdl/internal/http/httperr"
 	"yatdl/internal/http/middleware"
 )
 
@@ -39,14 +40,14 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "user not authenticated", http.StatusUnauthorized)
+		httperr.Write(w, &httperr.Unauthorized)
 		return
 	}
 
 	var request createTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Printf("failed to decode task request: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		httperr.Write(w, &httperr.BadRequest)
 		return
 	}
 
@@ -58,7 +59,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	task, err := h.service.CreateTask(r.Context(), input)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		httperr.Write(w, &httperr.Unknown)
 		return
 	}
 
@@ -80,18 +81,18 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	taskID, err := strconv.ParseUint(taskIDParam, 10, 64)
 	if err != nil {
 		log.Printf("failed to parse task id: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		httperr.Write(w, &httperr.BadRequest)
 		return
 	}
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "user not authenticated", http.StatusUnauthorized)
+		httperr.Write(w, &httperr.Unauthorized)
 		return
 	}
 	var request updateTaskRequest
 	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Printf("failed to decode task request: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		httperr.Write(w, &httperr.BadRequest)
 	}
 
 	err = h.service.UpdateTask(r.Context(), UpdateTaskInput{
@@ -106,10 +107,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	case err == nil:
 		w.WriteHeader(http.StatusNoContent)
 	case errors.Is(err, sql.ErrNoRows):
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		httperr.Write(w, &httperr.TaskNotFound)
 	case errors.Is(err, ErrCannotUpdateTaskFromAnotherUser):
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		httperr.Write(w, &httperr.Forbidden)
 	default:
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		httperr.Write(w, &httperr.Unknown)
 	}
 }

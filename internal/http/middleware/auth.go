@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"yatdl/internal/auth"
+	"yatdl/internal/http/httperr"
 )
 
 type contextKey string
@@ -18,21 +19,21 @@ func Auth(jwt *auth.Jwt) func(http.Handler) http.Handler {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				log.Println("missing authorization header")
-				http.Error(w, "missing authorization header", http.StatusUnauthorized)
+				httperr.Write(w, &httperr.Unauthorized)
 				return
 			}
 
 			parts := strings.SplitN(authHeader, " ", 2)
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				log.Println("invalid authorization header")
-				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+				httperr.Write(w, &httperr.Unauthorized)
 				return
 			}
 
 			userID, err := jwt.ValidateJWT(parts[1])
 			if err != nil {
 				log.Printf("failed to validate JWT: %v", err)
-				http.Error(w, "invalid or expired token", http.StatusUnauthorized)
+				httperr.Write(w, &httperr.ExpiredToken)
 				return
 			}
 
